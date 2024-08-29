@@ -22,6 +22,7 @@ async def textFunction(message, context, guildMap, counter):
             print("welsh/other msg error trash...")
             counter+=1
             await textFunction(message, context, guildMap, counter)
+            return 
         
         sGuildmap["messageCount"] += 1                      # message counter add 1
         await message.channel.send(response)                #send response
