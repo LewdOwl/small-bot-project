@@ -30,7 +30,8 @@ async def imageCreation(IMGtoken, userContent, counter):
     	# Code to handle the error
 		print("Internal server error... regenerating")
 		counter+=1
-		await imageCreation(IMGtoken, userContent, counter)
+		return await imageCreation(IMGtoken, userContent, counter)       #should return the final one...
+
 	return File(fp=io.BytesIO(image_bytes), filename='output.png')
 
 #actual function
