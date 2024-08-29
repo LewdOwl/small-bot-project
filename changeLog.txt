@@ -1,0 +1,8 @@
+1. added & improved threading (responsive during execution of command)
+2. implanted dictionary structure and overall revamp for text generation 
+3. added a small patch to the "Welsh" bug for text generation
+4. added limits to the context window for text generation
+5. added :3 command
+6. added help & change log command
+7. added a small patch for empty image generation 
+8. changed an api for image generation

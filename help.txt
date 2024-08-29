@@ -1,0 +1,5 @@
+`help`: shows this command
+`source`: output website(s) scrapped to generate text
+`um`: text generation
+`draw`: image generation
+`make`: music generation
