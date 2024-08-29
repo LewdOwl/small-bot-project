@@ -3,8 +3,6 @@ import random
 from discord import File
 import os
 import aiohttp
-import base64
-
 
 # previous
 # def query(payload, API_URL, header):
@@ -16,7 +14,6 @@ async def query(payload, API_URL, header):
             async with session.post(API_URL, headers=header, json=payload) as response:
                 return await response.read()
 
-
 # require token for api and content for prompt
 async def imageCreation(IMGtoken, userContent, counter):
 	API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev"
@@ -27,8 +24,6 @@ async def imageCreation(IMGtoken, userContent, counter):
 		"seed": random.randint(0, 1e6)
 	}, API_URL, headers)
 	# send discord file
-	# imgSTR = base64.b64encode(image_bytes).decode('utf-8')[:1]
-	print(image_bytes)
 	
 	#I do NOT want JSON
 	if image_bytes[:1] == b'{' and counter <= 5:
@@ -36,7 +31,6 @@ async def imageCreation(IMGtoken, userContent, counter):
 		print("Internal server error... regenerating")
 		counter+=1
 		await imageCreation(IMGtoken, userContent, counter)
-		return
 	return File(fp=io.BytesIO(image_bytes), filename='output.png')
 
 #actual function
