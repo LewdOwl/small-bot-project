@@ -18,8 +18,8 @@ async def textFunction(message, context, guildMap, counter):
         response = response['message'].replace('\n', '\n')  #process raw response
 
         #panic fix for welsh error, maximum 5 rerolls
-        if counter < 5 and "I don’t understand Welsh yet" in response[:40]:
-            print("welsh msg error trash...")
+        if counter <= 5 and "I don’t understand" in response[:30]:
+            print("welsh/other msg error trash...")
             counter+=1
             await textFunction(message, context, guildMap, counter)
             return

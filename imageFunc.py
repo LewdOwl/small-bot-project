@@ -3,6 +3,7 @@ import random
 from discord import File
 import os
 import aiohttp
+import base64
 
 
 # previous
@@ -26,12 +27,16 @@ async def imageCreation(IMGtoken, userContent, counter):
 		"seed": random.randint(0, 1e6)
 	}, API_URL, headers)
 	# send discord file
-	if b"Internal server error" in image_bytes[:40] and counter <= 3:
+	# imgSTR = base64.b64encode(image_bytes).decode('utf-8')[:1]
+	print(image_bytes)
+	
+	#I do NOT want JSON
+	if image_bytes[:1] == b'{' and counter <= 5:
     	# Code to handle the error
 		print("Internal server error... regenerating")
 		counter+=1
-		await imageCreation(IMGtoken, userContent)
-
+		await imageCreation(IMGtoken, userContent, counter)
+		return
 	return File(fp=io.BytesIO(image_bytes), filename='output.png')
 
 #actual function
