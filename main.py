@@ -7,7 +7,12 @@ import asyncio
 import json
 import os
 
-#files, functions
+# import pkgutil
+# for module in pkgutil.iter_modules(['folder_name']):
+#     __import__(f"folder_name.{module.name}")
+
+# import rabbit hole
+# will fix this... later... this looks so bad
 from imageFunc import imageFunc
 from textFunc import textFunction
 from musicGENfunc import musicGENFunc
@@ -16,7 +21,7 @@ from imageFunc import imageFunc
 from resetContext import resetContext
 
 load_dotenv()                                                 # Load environment variables from .env file
-with open('.json','r') as file:
+with open('.json','r') as file:                               # vision of poor design
     ownerID = json.load(file)['friend']
     file.close()
 

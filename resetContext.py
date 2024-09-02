@@ -1,6 +1,6 @@
-from log import log
 from meta_ai_api import MetaAI
 from datetime import datetime
+from log import log
 
 async def resetContext(message, sGuildmap, context, condition):
     if isinstance(sGuildmap["instance"],int):
@@ -10,7 +10,8 @@ async def resetContext(message, sGuildmap, context, condition):
     else:
         timeDiff = datetime.now() - sGuildmap["lastMessageTime"]
         if condition == True or (sGuildmap["messageCount"] >= 50 or timeDiff.days >= 1):   # reset condition
-            #sGuildmap["instance"] = MetaAI()
+            del sGuildmap["instance"]
+            sGuildmap["instance"] = MetaAI()
             await log(message, "caused a reset")
-            sGuildmap["instance"].prompt(message= context, new_conversation=True)
+            sGuildmap["instance"].prompt(message= context)
             sGuildmap["messageCount"] = 1
