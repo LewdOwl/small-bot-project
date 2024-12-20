@@ -1,29 +1,39 @@
 #libs
-from datetime import datetime
 from discord.ext import commands
 from dotenv import load_dotenv
 import discord
 import asyncio
 import json
 import os
-
+# crazy
+from src.AI_model_classes.meta_class.meta_AI import meta_ai
+from src.AI_model_classes.gemini_class.gemini_AI import gemini_ai
 # import pkgutil
 # for module in pkgutil.iter_modules(['folder_name']):
 #     __import__(f"folder_name.{module.name}")
 
-# import rabbit hole
-# will fix this... later... this looks so bad
 from imageFunc import imageFunc
-from textFunc import textFunction
+from textFuncMeta import textFunctionMeta
+from textFuncGemini import textFunctionGemini
 from musicGENfunc import musicGENFunc
 from log import log
 from imageFunc import imageFunc
-from resetContext import resetContext
+#personalities from now
+from src.AI_model_classes.gemini_class.personality_folder.insult import insult
+from src.AI_model_classes.gemini_class.personality_folder.mechanical import mechanical
+from src.AI_model_classes.gemini_class.personality_folder.void import void
+
+
 
 load_dotenv()                                                 # Load environment variables from .env file
 with open('.json','r') as file:                               # vision of poor design
-    ownerID = json.load(file)['friend']
-    file.close()
+    data = json.load(file)
+ownerID = data['friend']
+
+
+insult_context = data['geminiINSTRUCTIONmap'][0]['insult'][0]['context1']
+mechanical_context = data['geminiINSTRUCTIONmap'][0]['mechanical'][0]['context1']
+void_context = data['geminiINSTRUCTIONmap'][0]['concise/void'][0]['context1']
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -34,23 +44,26 @@ client = commands.Bot(
     strip_after_prefix = True,
     intents = intents
 )
+guildMap = {}
 
+metaContext = os.getenv('context')
+GEMINI_API_KEY = os.getenv('gemToken')                                   #global gemini guide
+REQUESTS_PER_MINUTE = int(os.getenv('REQUESTS_PER_MINUTE'))
 
-# client = discord.Client(intents = intents) # new client
+#really just a list
+personalityMap = [
+    insult(insult_context),
+    mechanical(mechanical_context),
+    void(void_context)
+]     #really just a list
 
-#prompt engineering
-context = os.getenv('context')                            
-guildMap = {}                                                            #instance for each guild
-
+# update guildMap
 @client.event
 async def on_ready(): 
     print('started\n{0.user} is online and connected to '.format(client) + str(len(client.guilds)) + " servers: ")
-    async for guild in client.fetch_guilds(limit=250): 
-
-        guildMap[str(guild.id)] = {"instance": 6, 
-                                   "source": "", 
-                                   "lastMessageTime": datetime.now(), 
-                                   "messageCount": 1                     #first message is the context file
+    async for guild in client.fetch_guilds(limit=250):
+        guildMap[str(guild.id)] = {"metaOBJ": meta_ai(metaContext),
+                                    "geminiOBJ": gemini_ai(personalityMap,GEMINI_API_KEY,REQUESTS_PER_MINUTE)
                                    }
 
         print(" - " + guild.name + " - " + str(guild.id))                #list every guild it is in
@@ -59,6 +72,7 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot or isinstance(message.channel, discord.channel.DMChannel):
         return
+
     if message.content == (":3"):
         with open('nya.txt', 'r') as file:
             content = file.read()
@@ -66,16 +80,27 @@ async def on_message(message):
         await message.channel.send(content) 
     await client.process_commands(message)
 
+    if client.user.mentioned_in(message):               # ping = main personality reply
+        await textFunctionMeta(message,guildMap)
+        await log(message, "generated message (meta)")
+
 # commands
 @client.command()
 async def um (ctx):
-    await log(ctx.message, "generated message")
-    await textFunction(ctx.message, context, guildMap, 0)                    #text helper function, update source
+    await textFunctionMeta(ctx.message,guildMap)
+    await log(ctx.message, "generated message (meta)")
+    return
+
+@client.command()
+async def uh (ctx):
+    await textFunctionGemini(ctx.message,guildMap)
+    await log(ctx.message, "generated message (gemini)")
 
 @client.command()
 async def source (ctx):
+    await guildMap[str(ctx.message.guild.id)]["metaOBJ"].sendSource(ctx.message)
     await log(ctx.message, "checked source")
-    await ctx.message.channel.send(guildMap[str(ctx.message.guild.id)]["source"])
+    return
 
 @client.command()
 async def draw (ctx):
@@ -102,14 +127,22 @@ async def change_log(ctx):
     file.close()
 
 #===============# 
-# spec commands # does not work rn
+# spec commands #
 #===============#
 
 @client.command()
 @commands.is_owner()
-async def reset(ctx):                                                       #force reset chat history
-    sGuildMap = guildMap[str(ctx.message.guild.id)]
-    await resetContext(ctx.message, sGuildMap, context, True)
+async def resetMeta(ctx):                                                       #force reset chat history
+    message = ctx.message
+    await guildMap[str(message.guild.id)]["metaOBJ"].resetCheck(message,True)
+    return
+
+@client.command()
+@commands.is_owner()
+async def resetGemini(ctx):                                                       #force reset gemini
+    message = ctx.message
+    guildMap[str(message.guild.id)]["geminiOBJ"].geminiReset(True)
+    return
 
 
 @client.command()
@@ -123,6 +156,37 @@ async def bail(ctx, *, ID):
     except:
         print("Guild does not exist! ID: " + guild.name)
         await ctx.send("I'm not part of this guild! Check the ID please.")
+
+@client.command()
+@commands.is_owner()
+async def s(ctx):
+    message = ctx.message
+    guildID = str(message.guild.id)                    #shorthand
+    geminiOBJ = guildMap[guildID]["geminiOBJ"]                 #shorthand
+
+    async with message.channel.typing():
+        await geminiOBJ.squery(message, message.attachments[0] if message.attachments else None)                     #this will send response
+
+
+@client.command()
+@commands.is_owner()
+async def ss(ctx):
+    message = ctx.message
+    guildID = str(message.guild.id)                    #shorthand
+    geminiOBJ = guildMap[guildID]["geminiOBJ"]                 #shorthand
+
+    async with message.channel.typing():
+        await geminiOBJ.ssquery(message, message.attachments[0] if message.attachments else None)                     #this will send response
+
+
+#===============# 
+# debug commands#
+#===============#
+@client.command()
+@commands.is_owner()
+async def historyGemini(ctx):
+    message = ctx.message
+    guildMap[str(message.guild.id)]["geminiOBJ"].printHistory()
 
 
 #running

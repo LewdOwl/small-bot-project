@@ -28,10 +28,9 @@ async def imageCreation(IMGtoken, userContent, counter):
 	#I do NOT want JSON
 	if image_bytes[:1] == b'{' and counter <= 5:
     	# Code to handle the error
-		print("Internal server error... regenerating")
+		print(f"Internal server error... regenerating; error is {image_bytes}")
 		counter+=1
 		return await imageCreation(IMGtoken, userContent, counter)       #should return the final one...
-
 	return File(fp=io.BytesIO(image_bytes), filename='output.png')
 
 #actual function

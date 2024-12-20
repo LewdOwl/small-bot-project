@@ -1,2 +1,10 @@
-1. bug fixes
-2. attempted to group files in folders and import them iteratively, failed
+1. main personality change
+2. fixed reset conditions
+3. should be smarter, 5k character context for now
+4. changed nya.txt
+5. can now ping bot for it to respond (main personality only)
+6. rewrote a lot of code, added classes and inheritance
+7. added 4 different sub personalities including base
+8. now accepting pictures as attachment (sub personality only)
+9. sub personalities rotate randomly as of now
+10. added basic hierarchical structure for 1 feature
